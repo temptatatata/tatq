@@ -1,15 +1,4 @@
-FOR UC 121
-
-In your Elevated PowerShell prompt, execute the trigger:
-
-.\uc_121_trigger_domain_trust_rdp.ps1 -All
-
-.\uc_121_verify_domain_trust_rdp.ps1 -LastMinutes 15
-
-Get-WinEvent -FilterHashtable @{LogName='Security'; Id=@(4716, 4624); StartTime=(Get-Date).AddMinutes(-15)} -MaxEvents 200 | `
-    Where-Object { ($_.Id -eq 4716) -or ($_.Id -eq 4624 -and ([xml]$_.ToXml()).Event.EventData.Data | Where-Object {$_.Name -eq 'LogonType' -and $_.'#text' -eq '10'}) } | `
-    Select-Object TimeCreated, Id, `
-        @{N='RuleBlock';E={if($_.Id -eq 4716){'Block 1 (Domain Trust Modified)'}else{'Block 2 (RDP Logon Type 10)'}}}, `
-        @{N='User';E={(([xml]$_.ToXml()).Event.EventData.Data | Where-Object {$_.Name -match 'UserName'}).'#text'}}, `
-        @{N='Host';E={$_.MachineName}} | Format-Table -AutoSize
-
+Get-WinEvent -FilterHashtable @{LogName='Security';Id=4688} -MaxEvents 10000 |
+Where-Object {$_.Message -match 'robocopy|xcopy|Copy-Item|cmd.exe.*copy|powershell.*copy|move.exe'} |
+Select-Object TimeCreated, Message |
+Format-List
